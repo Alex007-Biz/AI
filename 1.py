@@ -1,21 +1,24 @@
 import torch
-from diffusers import FluxPipeline
+from diffusers import DiffusionPipeline
+from huggingface_hub import hf_hub_download
 
-pipe = FluxPipeline.from_pretrained(
+# Установим параметры для кеширования файлов вручную (если нужно)
+import os
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"  # Отключаем предупреждение о symlink на Windows
+
+# Загружаем модель
+pipe = DiffusionPipeline.from_pretrained(
     "black-forest-labs/FLUX.1-dev",
-    torch_dtype=torch.bfloat16,
-    AlexB_token="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"
+    use_auth_token="ваш_токен_здесь"
 )
-pipe.enable_model_cpu_offload() #save some VRAM by offloading the model to CPU. Remove this if you have enough GPU power
 
+# Запрос на генерацию изображения
 prompt = "A cat holding a sign that says hello world"
-image = pipe(
-    prompt,
-    height=524,
-    width=524,
-    guidance_scale=3.5,
-    num_inference_steps=50,
-    max_sequence_length=512,
-    generator=torch.Generator("cpu").manual_seed(0)
-).images[0]
+image = pipe(prompt).images[0]
+
+# Сохранение изображения
 image.save("flux-dev.png")
+
+# #Аутентификация в терминале:
+# huggingface-cli login
+# #После этого вам нужно будет ввести ваш токен. Это аутентифицирует вашу среду для доступа к закрытым репозиториям, и diffusers сможет использовать этот токен автоматически.
